@@ -41,3 +41,11 @@ Probably should make a fastore shared library and link to it during compilation.
 Right now thw files in Open/fastore differ from the files here (but not sure what exactly).
 
 Ideally, this shared library would be rewritten in Rust!
+
+## 24/12/2019
+
+Got a basic ORE operator class and BTREE index working (but with a weaker security assumption).
+To make this better we'd avoid storing the "left" cipher texts but not sure how to fully
+implement the operator class in that case.
+
+Still, this is a milestone!

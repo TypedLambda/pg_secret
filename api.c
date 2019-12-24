@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "api.h"
+
 /* ORE settings for the NIF */
 #define ORE_NBITS 32
 #define ORE_BLOCK_LEN 8
@@ -126,38 +128,30 @@ int ore_encrypt(
   return 0;
 }
 
-/*
-static ERL_NIF_TERM
-nif_compare(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+int compare_secret(Secret *a, Secret *b) {
   ore_blk_params params;
   int result = 0;
-  ErlNifBinary a_left;
-  ErlNifBinary a_right;
-  ErlNifBinary b_left;
-  ErlNifBinary b_right;
 
   ore_blk_ciphertext cipher_text_a;
   ore_blk_ciphertext cipher_text_b;
 
-  CHECK_ARG_COUNT(argc, 4);
-  CHECK_ARG(enif_inspect_binary(env, argv[0], &a_left));
-  CHECK_ARG(enif_inspect_binary(env, argv[1], &a_right));
-  CHECK_ARG(enif_inspect_binary(env, argv[2], &b_left));
-  CHECK_ARG(enif_inspect_binary(env, argv[3], &b_right));
+  ASSERT(init_ore_blk_params(params, ORE_NBITS, ORE_BLOCK_LEN)) {
+    // TODO: CLeanup?
+    return -1;
+  }
+  ASSERT(init_ore_blk_ciphertext(cipher_text_a, params)) {
+    // TODO: CLeanup?
+    return -1;
+  }
+  ASSERT(init_ore_blk_ciphertext(cipher_text_b, params)) {
+    // TODO: CLeanup?
+    return -1;
+  }
 
-  ASSERT_ERR(init_ore_blk_params(params, ORE_NBITS, ORE_BLOCK_LEN));
-  ASSERT_ERR(init_ore_blk_ciphertext(cipher_text_a, params));
-  ASSERT_ERR(init_ore_blk_ciphertext(cipher_text_b, params));
-
-  // Initialise the cipher text structs with passed values
-  // probs should create a function to do this in ore_blk
-  memcpy(cipher_text_a->comp_left, a_left.data, CTL_LEN(params));
-  memcpy(cipher_text_a->comp_right, a_right.data, CTR_LEN(params));
-  memcpy(cipher_text_b->comp_left, b_left.data, CTL_LEN(params));
-  memcpy(cipher_text_b->comp_right, b_right.data, CTR_LEN(params));
-
-  DEBUG_CT_B64(params, cipher_text_a);
-  DEBUG_CT_B64(params, cipher_text_b);
+  memcpy(cipher_text_a->comp_left, a->left, CTL_LEN(params));
+  memcpy(cipher_text_a->comp_right, a->right, CTR_LEN(params));
+  memcpy(cipher_text_b->comp_left, b->left, CTL_LEN(params));
+  memcpy(cipher_text_b->comp_right, b->right, CTR_LEN(params));
 
   ASSERT(ore_blk_compare(&result, cipher_text_a, cipher_text_b)) {
     clear_ore_blk_ciphertext(cipher_text_a);
@@ -168,7 +162,5 @@ nif_compare(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   clear_ore_blk_ciphertext(cipher_text_a);
   clear_ore_blk_ciphertext(cipher_text_b);
 
-  return OK_TUPLE(
-    enif_make_int(env, result)
-  );
-}*/
+  return result;
+}
