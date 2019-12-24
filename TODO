@@ -5,3 +5,5 @@
 * Determine how to avoid accidentally logging the key in psql sessions or elsewhere
 * Decode keys from base64 or binary (_in vs _recv)
 * Can the prf_key be safely derived from the prp_key or vice-versa?
+* Load test with 1000's or millions of records (CPU/Memory/Disk performance)
+* Possibly avoid the extra memcpy to translate between types (i.e. can Secret simply embed an ORE ct?)
