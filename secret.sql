@@ -1,18 +1,9 @@
-CREATE FUNCTION secret_in(cstring)
-   RETURNS secret
-   AS '/Users/daniel/Projects/Modulo/spikes/ore_types/secret'
-   LANGUAGE C IMMUTABLE STRICT;
+CREATE DOMAIN secret AS bytea CHECK (octet_length(VALUE) = 224);
+CREATE DOMAIN key AS bytea CHECK (octet_length(VALUE) = 16);
 
-CREATE FUNCTION secret_out(secret)
-   RETURNS cstring
-   AS '/Users/daniel/Projects/Modulo/spikes/ore_types/secret'
-   LANGUAGE C IMMUTABLE STRICT;
-
-CREATE TYPE secret (
-   internallength = 600,
-   input = secret_in,
-   output = secret_out
-);
+CREATE FUNCTION make_secret(key, key, int8) RETURNS secret
+  AS '/Users/daniel/Projects/Modulo/spikes/ore_types/secret'
+  LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION secret_lt(secret, secret) RETURNS bool
   AS '/Users/daniel/Projects/Modulo/spikes/ore_types/secret'
@@ -69,7 +60,7 @@ CREATE FUNCTION secret_cmp(secret, secret) RETURNS int4
   LANGUAGE C IMMUTABLE STRICT;
 
 -- now we can make the operator class
-CREATE OPERATOR CLASS secret_ops
+CREATE OPERATOR CLASS secret_btree_ops
     DEFAULT FOR TYPE secret USING btree AS
         OPERATOR        1       < ,
         OPERATOR        2       <= ,
@@ -78,7 +69,10 @@ CREATE OPERATOR CLASS secret_ops
         OPERATOR        5       > ,
         FUNCTION        1       secret_cmp(secret, secret);
 
-create table secret_test (name text, phone secret);
+create table secret_test (name text, phone secret, email secret);
 
-CREATE INDEX test_secret_ind ON secret_test
-   USING btree(phone secret_ops);
+CREATE INDEX secret_phone_ind ON secret_test
+   USING btree(phone secret_btree_ops);
+
+CREATE INDEX secret_email_ind ON secret_test
+   USING btree(email secret_btree_ops);
