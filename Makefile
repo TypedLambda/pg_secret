@@ -13,7 +13,7 @@ TESTS = tests
 SRC = $(FASTORE)/crypto.c $(FASTORE)/ore.c $(FASTORE)/ore_blk.c
 OUTPUT = $(CURDIR)/secret.so
 FASTORE_OBJ = $(patsubst $(FASTORE)/%.c,$(BUILD)/%.o, $(SRC))
-OBJPATHS = $(FASTORE_OBJ) $(BUILD)/secret.o $(BUILD)/api.o $(BUILD)/b64.o
+OBJPATHS = $(FASTORE_OBJ) $(BUILD)/secret.o
 
 all: $(OBJPATHS) $(OUTPUT)
 
@@ -22,12 +22,6 @@ $(BUILD):
 	mkdir -p $(BUILD)
 
 $(BUILD)/secret.o: secret.c debug.h | $(BUILD)
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-$(BUILD)/b64.o: b64.c | $(BUILD)
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-$(BUILD)/api.o: api.c debug.h | $(BUILD)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(BUILD)/%.o: | $(BUILD)
