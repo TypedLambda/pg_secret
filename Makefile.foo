@@ -13,7 +13,7 @@ TESTS = tests
 SRC = $(FASTORE)/crypto.c $(FASTORE)/ore.c $(FASTORE)/ore_blk.c
 OUTPUT = $(CURDIR)/foo
 FASTORE_OBJ = $(patsubst $(FASTORE)/%.c,$(BUILD)/%.o, $(SRC))
-OBJPATHS = $(FASTORE_OBJ) $(BUILD)/api.o $(BUILD)/base64.o $(BUILD)/foo.o
+OBJPATHS = $(FASTORE_OBJ) $(BUILD)/siphash.o $(BUILD)/foo.o
 
 all: $(OBJPATHS) $(OUTPUT)
 
@@ -24,10 +24,7 @@ $(BUILD):
 $(BUILD)/foo.o: foo.c debug.h | $(BUILD)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(BUILD)/base64.o: base64.c | $(BUILD)
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-$(BUILD)/api.o: api.c debug.h | $(BUILD)
+$(BUILD)/siphash.o: siphash.c | $(BUILD)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(BUILD)/%.o: | $(BUILD)

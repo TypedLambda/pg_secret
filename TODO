@@ -1,12 +1,11 @@
 * Cleanup code (make api functions only deal with Secret type)
+* Use libtool to compile for multiple platforms (test on linux)
+* Link to external fastore library (or at least make a submodule)
 * Package as an extension
-* Make out function encode data as B64
 * Store (or workout how to retrieve) the original data value (maybe a simple AES block encrypt)
 * Determine how to avoid accidentally logging the key in psql sessions or elsewhere
-* Decode keys from base64 or binary (_in vs _recv)
 * Can the prf_key be safely derived from the prp_key or vice-versa?
 * Load test with 1000's or millions of records (CPU/Memory/Disk performance)
-* Possibly avoid the extra memcpy to translate between types (i.e. can Secret simply embed an ORE ct?)
 
 Later
 * Landing page to capture interest (use ASCIIcasts)
@@ -24,3 +23,6 @@ Later
 * Region/storage selection for an instance
 * ISO/SOC2 compliance
 
+Done
+* Decode keys from base64 or binary (_in vs _recv)
+* Make out function encode data as B64
