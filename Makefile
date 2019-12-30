@@ -13,7 +13,7 @@ TESTS = tests
 SRC = $(FASTORE)/crypto.c $(FASTORE)/ore.c $(FASTORE)/ore_blk.c
 OUTPUT = $(CURDIR)/secret.so
 FASTORE_OBJ = $(patsubst $(FASTORE)/%.c,$(BUILD)/%.o, $(SRC))
-OBJPATHS = $(FASTORE_OBJ) $(BUILD)/secret.o
+OBJPATHS = $(FASTORE_OBJ) $(BUILD)/secret.o $(BUILD)/siphash.o $(BUILD)/internal.o
 
 all: $(OBJPATHS) $(OUTPUT)
 
@@ -22,6 +22,12 @@ $(BUILD):
 	mkdir -p $(BUILD)
 
 $(BUILD)/secret.o: secret.c debug.h | $(BUILD)
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(BUILD)/siphash.o: siphash.c | $(BUILD)
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(BUILD)/internal.o: internal.c | $(BUILD)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(BUILD)/%.o: | $(BUILD)

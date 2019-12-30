@@ -1,8 +1,12 @@
 CREATE DOMAIN secret AS bytea CHECK (octet_length(VALUE) = 224);
-CREATE DOMAIN key AS bytea CHECK (octet_length(VALUE) = 16);
+CREATE DOMAIN key AS bytea; -- CHECK (octet_length(VALUE) = 16);
 
 CREATE FUNCTION make_secret(key, key, int8) RETURNS secret
-  AS '/Users/daniel/Projects/Modulo/spikes/ore_types/secret'
+  AS '/Users/daniel/Projects/Modulo/spikes/ore_types/secret', 'make_secret'
+  LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION make_secret(key, key, text) RETURNS secret
+  AS '/Users/daniel/Projects/Modulo/spikes/ore_types/secret', 'make_secret_string'
   LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION secret_lt(secret, secret) RETURNS bool
