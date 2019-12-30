@@ -11,7 +11,7 @@ LDPATH = -L/usr/lib -L/usr/local/opt/openssl@1.1/lib
 BUILD = _build
 TESTS = tests
 SRC = $(FASTORE)/crypto.c $(FASTORE)/ore.c $(FASTORE)/ore_blk.c
-OUTPUT = $(CURDIR)/secret.so
+OUTPUT = $(CURDIR)/pgsecret.so
 FASTORE_OBJ = $(patsubst $(FASTORE)/%.c,$(BUILD)/%.o, $(SRC))
 OBJPATHS = $(FASTORE_OBJ) $(BUILD)/secret.o $(BUILD)/siphash.o $(BUILD)/internal.o
 
