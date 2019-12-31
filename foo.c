@@ -225,6 +225,10 @@ INTERNAL_gcm_encrypt_string(
   return ciphertext_len;
 }
 
+/* NEXT UP
+ * In the postgres function handler, allocate a bytea of the appropriate size
+ * (using the functions here). Then pass VARDATA(b) to the encrypt function as the output parameter
+ */
 int main(void)
 {
   /*
