@@ -5,6 +5,8 @@
 #include <string.h>
 
 #define IV_LEN 16
+#define TAG_LEN 16
+#define BLOCKSIZE 16
 
 void handleErrors(void);
 
@@ -23,6 +25,7 @@ int gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
     unsigned char *iv,
     unsigned char *plaintext);
 
+// TODO: Make static
 int
 uint64_to_bytes(uint64_t n, unsigned char output[8])
 {
@@ -38,6 +41,7 @@ uint64_to_bytes(uint64_t n, unsigned char output[8])
   return 1;
 }
 
+// TODO: Make static
 uint64_t
 bytes_to_uint64(const unsigned char input[8])
 {
@@ -53,22 +57,33 @@ bytes_to_uint64(const unsigned char input[8])
   return n;
 }
 
+// TODO: Make static
+/*
+ * We generate IV_LEN bytes for a the IV
+ * so long as IV_LEN > 96 bits.
+ * See https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
+ */
 int
 INTERNAL_gen_iv(unsigned char buf[IV_LEN])
 {
-  return RAND_bytes(buf, IV_LEN);
+  if (IV_LEN > 12) {
+    return RAND_bytes(buf, IV_LEN);
+  } else {
+    abort();
+  }
 }
 
 int
 INTERNAL_gcm_encrypt_uint64(
     uint64_t input,
     unsigned char *key,
-    unsigned char *iv,
-    unsigned char *ciphertext,
-    unsigned char *tag)
+    unsigned char *output)
 {
   unsigned char plaintext[8];
   int ciphertext_len;
+  unsigned char *iv = output;
+  unsigned char *tag = iv + IV_LEN;
+  unsigned char *ciphertext = tag + TAG_LEN;
 
   if (INTERNAL_gen_iv(iv) != 1) {
     handleErrors();
@@ -89,18 +104,109 @@ INTERNAL_gcm_encrypt_uint64(
    * so let's clean up after ourselves */
   memset(plaintext, 0, 8);
 
-  return ciphertext_len;
+  return ciphertext_len + IV_LEN + TAG_LEN;
+}
+
+// TODO: Rename these to SYM_... and the others ORE_..., anything else UTIL_...
+int
+INTERNAL_gcm_decrypt_uint64(
+    unsigned char *input,
+    int input_len,
+    unsigned char *key,
+    uint64_t *output)
+{
+  unsigned char *iv = input;
+  unsigned char *tag = iv + IV_LEN;
+  unsigned char *ciphertext = tag + TAG_LEN;
+  unsigned char plaintext[8];
+
+  int decrypted_len =
+    gcm_decrypt(
+        ciphertext,
+        input_len - IV_LEN - TAG_LEN,
+      (unsigned char *)"", 0,
+      tag,
+      key, iv,
+      plaintext);
+
+  if (decrypted_len != 8) {
+    /* error if decrypted_len != 8*/
+    memset(plaintext, 0, 8);
+    return -1;
+  }
+
+  *output = bytes_to_uint64(plaintext);
+
+  /* We effectively took a copy of the plaintext
+   * so let's clean up after ourselves */
+  memset(plaintext, 0, 8);
+
+  return 8;
+}
+
+/*
+ * output should be allocated to plaintext length + 1 (for null terminator)
+ */
+int
+INTERNAL_gcm_decrypt_string(
+    unsigned char *input,
+    int input_len,
+    unsigned char *key,
+    unsigned char *output)
+{
+  unsigned char *iv = input;
+  unsigned char *tag = iv + IV_LEN;
+  unsigned char *ciphertext = tag + TAG_LEN;
+
+  int decrypted_len =
+    gcm_decrypt(
+      ciphertext, input_len,
+      (unsigned char *)"", 0,
+      tag,
+      key,
+      iv,
+      output
+    );
+
+  printf("Decrypted len = %d\n", decrypted_len);
+
+  if (decrypted_len >= 0) {
+    output[decrypted_len] = '\0';
+    return decrypted_len;
+  } else {
+    /* Caller should memset 0 the plaintext */
+    return -1;
+  }
+}
+
+// TODO: This could be inlined
+size_t
+INTERNAL_gcm_ciphertext_string_len(unsigned char *plaintext)
+{
+  size_t plaintext_len = strlen((char *)plaintext);
+  return (plaintext_len / BLOCKSIZE + 1) * BLOCKSIZE + IV_LEN + TAG_LEN;
+}
+
+// TODO: This could be inlined
+size_t
+INTERNAL_gcm_ciphertext_uint64_len()
+{
+  size_t plaintext_len = 8;
+  size_t len = (plaintext_len / BLOCKSIZE + 1) * BLOCKSIZE + IV_LEN + TAG_LEN;
+  printf("len = %zu\n", len);
+  return len;
 }
 
 int
 INTERNAL_gcm_encrypt_string(
     unsigned char *plaintext,
     unsigned char *key,
-    unsigned char *iv,
-    unsigned char *ciphertext,
-    unsigned char *tag)
+    unsigned char *output)
 {
   int ciphertext_len;
+  unsigned char *iv = output;
+  unsigned char *tag = iv + IV_LEN;
+  unsigned char *ciphertext = tag + TAG_LEN;
 
   if (INTERNAL_gen_iv(iv) != 1) {
     handleErrors();
@@ -115,22 +221,8 @@ INTERNAL_gcm_encrypt_string(
       ciphertext, tag
     );
 
+  printf("Input len = %d, String CT len = %d\n",strlen((char *)plaintext), ciphertext_len);
   return ciphertext_len;
-}
-
-int main_a(void) {
-  unsigned char plaintext[8];
-  uint64_t n = 1953750214886623795;
-  //unsigned char iv[16];
-
-  uint64_to_bytes(n, plaintext);
-  printf("input is %llu\n", n);
-  printf("Plaintext is:\n");
-  BIO_dump_fp (stdout, (const char *)plaintext, 8);
-
-  printf("Demarshalled: %llu\n", bytes_to_uint64(plaintext));
-
-  return 0;
 }
 
 int main(void)
@@ -148,45 +240,31 @@ int main(void)
     (unsigned char *)"The quick brown fox jumps over the lazy dog";
 
   //uint64_t n = 1953750214886623795;
-  unsigned char iv[16];
-  unsigned char ciphertext[128];
-  unsigned char tag[16];
 
-  /* Buffer for the decrypted text */
-  unsigned char decryptedtext[128];
+  //unsigned char *output = (unsigned char *)malloc(INTERNAL_gcm_ciphertext_uint64_len());
+  unsigned char *output = (unsigned char *)malloc(INTERNAL_gcm_ciphertext_string_len(plaintext));
 
-  int decryptedtext_len, ciphertext_len;
+  int output_len;
 
-  //ciphertext_len = INTERNAL_gcm_encrypt_uint64(n, key, iv, ciphertext, tag);
-  ciphertext_len = INTERNAL_gcm_encrypt_string(plaintext, key, iv, ciphertext, tag);
+  //output_len = INTERNAL_gcm_encrypt_uint64(n, key, output);
+  output_len = INTERNAL_gcm_encrypt_string(plaintext, key, output);
 
   /* Do something useful with the ciphertext here */
-  printf("Ciphertext is:\n");
-  BIO_dump_fp (stdout, (const char *)ciphertext, ciphertext_len);
+  printf("Output (len %d) is:\n", output_len);
+  BIO_dump_fp (stdout, (const char *)output, output_len);
 
-  printf("Tag is:\n");
-  BIO_dump_fp (stdout, (const char *)tag, 16);
+  unsigned char *decrypted = (unsigned char *)malloc(output_len + 1);
+  //uint64_t decrypted;
 
-  /* Decrypt the ciphertext */
-  decryptedtext_len = gcm_decrypt(ciphertext, ciphertext_len,
-      (unsigned char *)"", 0,
-      tag,
-      key, iv,
-      decryptedtext);
+  //INTERNAL_gcm_decrypt_uint64(output, output_len, key, &decrypted); 
+  //printf("Decrypted int is %llu\n", decrypted);
 
-  if (decryptedtext_len >= 0) {
-    /* Add a NULL terminator if we are expecting printable text */
-    decryptedtext[decryptedtext_len] = '\0';
-
-    /* Show the decrypted text */
-    printf("Decrypted text is:\n");
-    printf("%s\n", decryptedtext);
-
-    //printf("Decrypted text (len: %d) is: %llu\n", decryptedtext_len, bytes_to_uint64(decryptedtext));
+  if (INTERNAL_gcm_decrypt_string(output, output_len, key, decrypted) >= 0) {
+    printf("Decrypted string is %s\n", decrypted);
   } else {
+    memset(decrypted, 0, output_len + 1);
     printf("Decryption failed\n");
   }
-
   return 0;
 }
 
@@ -259,13 +337,15 @@ do_gcm_encrypt(
   ciphertext_len += len;
 
   /* Get the tag */
-  if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, tag)) {
+  if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_LEN, tag)) {
     handleErrors();
   }
 
   /* Clean up */
   EVP_CIPHER_CTX_free(ctx);
 
+  // TODO: This is different to the size we calculate ahead of time - why?
+  printf("CT len returned %d\n", ciphertext_len);
   return ciphertext_len;
 }
 
@@ -313,7 +393,7 @@ int gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
   plaintext_len = len;
 
   /* Set expected tag value. Works in OpenSSL 1.0.1d and later */
-  if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, 16, tag))
+  if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_LEN, tag))
     handleErrors();
 
   /*
