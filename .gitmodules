@@ -1,0 +1,4 @@
+[submodule "fastore"]
+	path = fastore
+	url = https://github.com/coderdan/fastore
+	branch = master
