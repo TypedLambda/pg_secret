@@ -2,31 +2,31 @@ CREATE DOMAIN secret AS bytea CHECK (octet_length(VALUE) = 224);
 CREATE DOMAIN key AS bytea; -- CHECK (octet_length(VALUE) = 16);
 
 CREATE FUNCTION make_secret(key, key, int8) RETURNS secret
-  AS '/home/dan/Projects/Modulo/pg_secret/pgsecret', 'make_secret'
+  AS '$libdir/pgsecret', 'make_secret'
   LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION make_secret(key, key, text) RETURNS secret
-  AS '/home/dan/Projects/Modulo/pg_secret/pgsecret', 'make_secret_string'
+  AS '$libdir/pgsecret', 'make_secret_string'
   LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION secret_lt(secret, secret) RETURNS bool
-  AS '/home/dan/Projects/Modulo/pg_secret/pgsecret'
+  AS '$libdir/pgsecret'
   LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION secret_eq(secret, secret) RETURNS bool
-  AS '/home/dan/Projects/Modulo/pg_secret/pgsecret'
+  AS '$libdir/pgsecret'
   LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION secret_gt(secret, secret) RETURNS bool
-  AS '/home/dan/Projects/Modulo/pg_secret/pgsecret'
+  AS '$libdir/pgsecret'
   LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION secret_lte(secret, secret) RETURNS bool
-  AS '/home/dan/Projects/Modulo/pg_secret/pgsecret'
+  AS '$libdir/pgsecret'
   LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION secret_gte(secret, secret) RETURNS bool
-  AS '/home/dan/Projects/Modulo/pg_secret/pgsecret'
+  AS '$libdir/pgsecret'
   LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OPERATOR < (
@@ -60,7 +60,7 @@ CREATE OPERATOR >= (
 );
 
 CREATE FUNCTION secret_cmp(secret, secret) RETURNS int4
-  AS '/home/dan/Projects/Modulo/pg_secret/pgsecret'
+  AS '$libdir/pgsecret'
   LANGUAGE C IMMUTABLE STRICT;
 
 -- now we can make the operator class
