@@ -5,7 +5,7 @@ DATA = pgsecret--0.5.sql
 #HEADERS_isbn_issn = isbn_issn.h
 
 OBJS=siphash.o internal.o fastore/crypto.o ore_blk.o
-PG_CFLAGS=-I./fastore -I/usr/include/openssl/ -maes
+PG_CFLAGS=-I./fastore -I/usr/include/openssl/ -I/usr/local/opt/openssl@1.1/include -maes
 PG_LDFLAGS=-lgmp -lssl -lcrypto
 PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
