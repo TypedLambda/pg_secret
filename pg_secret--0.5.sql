@@ -1,5 +1,5 @@
 CREATE DOMAIN secret AS bytea CHECK (octet_length(VALUE) = 224);
-CREATE DOMAIN key AS bytea; -- CHECK (octet_length(VALUE) = 16);
+CREATE DOMAIN key AS bytea;
 
 CREATE FUNCTION make_secret(key, key, int8) RETURNS secret
   AS '$libdir/pgsecret', 'make_secret'
@@ -73,10 +73,3 @@ CREATE OPERATOR CLASS secret_btree_ops
         OPERATOR        5       > ,
         FUNCTION        1       secret_cmp(secret, secret);
 
-create table secret_test (name text, phone secret, email secret);
-
-CREATE INDEX secret_phone_ind ON secret_test
-   USING btree(phone secret_btree_ops);
-
-CREATE INDEX secret_email_ind ON secret_test
-   USING btree(email secret_btree_ops);

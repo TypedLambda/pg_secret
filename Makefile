@@ -1,8 +1,7 @@
 MODULE_big = pgsecret
-EXTENSION = pgsecret
-DATA = pgsecret--0.5.sql
-#DOCS = README.isbn_issn
-#HEADERS_isbn_issn = isbn_issn.h
+EXTENSION = pg_secret
+DATA = pg_secret--0.5.sql
+#DOCS = README.pg_secret
 
 OBJS=siphash.o internal.o fastore/crypto.o fastore/ore_blk.o pgsecret.o
 PG_CFLAGS=-I./fastore -I/usr/include/openssl/ -Wno-vla -Wno-declaration-after-statement -maes
