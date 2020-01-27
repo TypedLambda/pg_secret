@@ -49,3 +49,10 @@ To make this better we'd avoid storing the "left" cipher texts but not sure how 
 implement the operator class in that case.
 
 Still, this is a milestone!
+
+## 19/1/2020
+
+Building using pgxs and its not linking all of the objects (only pgsecret.o).
+Tried setting OBJS in the Makefile but that's not working.
+See https://www.postgresql.org/docs/12/extend-pgxs.html
+Looks like using `MODULE_big` was the trick!
